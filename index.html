@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pet Booking App</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 0;
+      background: url('pet-background.jpg') center/cover no-repeat fixed;
+      background-blur: 10px; /* Experimental property, may not be supported in all browsers */
+      color: #333;
+    }
+
+    header {
+      background-color: rgba(255, 255, 255, 0.8);
+      color: #333;
+      padding: 10px;
+      text-align: center;
+    }
+
+    main {
+      padding: 20px;
+    }
+
+    form {
+      background-color: rgba(255, 255, 255, 0.9);
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+    }
+
+    input {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 15px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      box-sizing: border-box;
+    }
+
+    button {
+      background-color: #333;
+      color: #fff;
+      padding: 10px 15px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    #ownerDashboard,
+    #caretakerDashboard,
+    #petDetails,
+    #requestList {
+      margin-top: 20px;
+    }
+
+    #requestList button {
+      background-color: #4CAF50;
+    }
+
+    #logo {
+      width: 80px;
+      height: 80px;
+      margin: 20px auto;
+      display: block;
+    }
+
+    @media (max-width: 600px) {
+      body {
+        background-blur: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Pet Booking App</h1>
+  </header>
+  <main>
+    <img id="logo" src="pet-logo.png" alt="Pet Logo">
+    <form id="loginForm">
+      <label for="username">Username:</label>
+      <input type="text" id="username" name="username" required>
+
+      <label for="password">Password:</label>
+      <input type="password" id="password" name="password" required>
+
+      <label for="userType">User Type:</label>
+      <select id="userType" name="userType" required>
+        <option value="owner">Pet Owner</option>
+        <option value="caretaker">Pet Caretaker</option>
+      </select>
+
+      <button type="button" onclick="login()">Login</button>
+    </form>
+
+    <div id="ownerDashboard" class="hidden">
+      <h2>Pet Owner Dashboard</h2>
+      <button onclick="showPetDetailsForm()">Post a Pet</button>
+      <div id="petDetails" class="hidden">
+        <h3>Pet Details</h3>
+        <!-- Form for posting pet details -->
+        <button onclick="goBack('ownerDashboard')">Go Back</button>
+      </div>
+      <button onclick="logout()">Logout</button>
+    </div>
+
+    <div id="caretakerDashboard" class="hidden">
+      <h2>Pet Caretaker Dashboard</h2>
+      <div id="requestList">
+        <h3>Request List</h3>
+        <!-- List of pet requests with buttons to request a pet -->
+        <button onclick="goBack('caretakerDashboard')">Go Back</button>
+      </div>
+      <button onclick="logout()">Logout</button>
+    </div>
+  </main>
+
+  <script>
+    // Sample data
+    const users = [
+      { username: 'petowner1', password: 'password1', userType: 'owner' },
+      { username: 'caretaker1', password: 'password1', userType: 'caretaker' }
+    ];
+
+    const petRequests = [];
+
+    let currentUser = null;
+
+    function login() {
+      const username = document.getElementById('username').value;
+      const password = document.getElementById('password').value;
+      const userType = document.getElementById('userType').value;
+
+      currentUser = users.find(user => user.username === username && user.password === password && user.userType === userType);
+
+      if (currentUser) {
+        document.getElementById('loginForm').classList.add('hidden');
+        if (currentUser.userType === 'owner') {
+          document.getElementById('ownerDashboard').classList.remove('hidden');
+          showPetDetailsForm();
+        } else {
+          document.getElementById('caretakerDashboard').classList.remove('hidden');
+          displayRequestList();
+        }
+      } else {
+        alert('Invalid login credentials.');
+      }
+    }
+
+    function showPetDetailsForm() {
+      document.getElementById('petDetails').classList.remove('hidden');
+      document.getElementById('petDetails').innerHTML = `
+        <form id="postPetForm">
+          <label for="petName">Pet Name:</label>
+          <input type="text" id="petName" name="petName" required>
+
+          <label for="petDetails">Pet Details:</label>
+          <textarea id="petDetails" name="petDetails" required></textarea>
+
+          <button type="button" onclick="postPet()">Post Pet</button>
+        </form>
+        <button onclick="goBack('ownerDashboard')">Go Back</button>
+      `;
+    }
+
+    function postPet() {
+      const petName = document.getElementById('petName').value;
+      const petDetails = document.getElementById('petDetails').value;
+      const newPet = { petName, petDetails, owner: currentUser.username };
+
+      petRequests.push(newPet);
+      alert('Pet posted successfully!');
+      displayRequestList();
+    }
+
+    function displayRequestList() {
+      const requestListDiv = document.getElementById('requestList');
+      requestListDiv.innerHTML = `
+        <h3>Request List</h3>
+        <ul>
+          ${petRequests.map((pet, index) => `
+            <li>
+              ${pet.petName} - ${pet.petDetails}
+              <button onclick="requestPet(${index})">Request</button>
+            </li>
+          `).join('')}
+        </ul>
+        <button onclick="goBack('caretakerDashboard')">Go Back</button>
+      `;
+    }
+
+    function requestPet(index) {
+      alert(`Request sent for ${petRequests[index].petName}`);
+    }
+
+    function goBack(dashboardId) {
+      document.getElementById(dashboardId).classList.remove('hidden');
+      document.getElementById('petDetails').classList.add('hidden');
+      document.getElementById('requestList').classList.add('hidden');
+    }
+
+    function logout() {
+      document.getElementById('ownerDashboard').classList.add('hidden');
+      document.getElementById('caretakerDashboard').classList.add('hidden');
+      document.getElementById('loginForm').classList.remove('hidden');
+    }
+  </script>
+</body>
+</html>
